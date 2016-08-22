@@ -1,0 +1,56 @@
+'''
+Created on 26 Sep 2013
+
+@author: mdallign
+'''
+import Rhino as rh
+import OriginAndOrientation as hoo
+import GlobalFunctions as hgf
+
+# create torus set out
+# set out chosen = Option02b_200
+roofPeak_Height = 93
+# was changed to 93 and 92 original 92.5
+roofEdge_Height = 78.8
+# was 79.4 and 78.5
+roofNorth_Span = 104
+roofEast_Span = 79
+
+# roof set out points
+edgeGutter_Height = 1.6 + roofEdge_Height
+edgeGutter_Depth = 0.4
+
+edgeZones_Height = 80.5
+
+
+roofNorth_Pt = rh.Geometry.Point3d(hoo.orXPos, roofNorth_Span, roofEdge_Height)
+roofSouth_Pt = rh.Geometry.Point3d(hoo.orXPos, -roofNorth_Span, roofEdge_Height)
+
+roofEast_Pt = rh.Geometry.Point3d(roofEast_Span, hoo.orYPos, roofEdge_Height)
+roofWest_Pt = rh.Geometry.Point3d(-roofEast_Span, hoo.orYPos, roofEdge_Height)
+
+roofPeak_Pt = rh.Geometry.Point3d(hoo.orXPos, hoo.orYPos,  roofPeak_Height)
+
+#the other points need to be created in gh because of team inputs
+
+#torus set out arcs
+roofNorthSouth_Arc = rh.Geometry.Arc(roofNorth_Pt, roofPeak_Pt, roofSouth_Pt)
+# the other arc needs to be generates in  gh because of team inputs
+
+
+# create torus
+torusCentre_Pt = rh.Geometry.Arc.Center.GetValue(roofNorthSouth_Arc)
+torusAxis_Ln = rh.Geometry.Line(torusCentre_Pt, hoo.originX_Dir, 100)
+# the torus needs to be generates in  gh because of team inputs
+
+# derivate base surfaces from torus 
+# create horizontal planes and curves
+roofEdge_Pt = rh.Geometry.Point3d(hoo.orXPos, hoo.orYPos, roofEdge_Height)
+edgeGutter_Pt = rh.Geometry.Point3d(hoo.orXPos, hoo.orYPos, edgeGutter_Height)
+edgeZones_Pt = rh.Geometry.Point3d(hoo.orXPos, hoo.orYPos, edgeZones_Height)
+gutterBottom_Pt = rh.Geometry.Point3d(hoo.orXPos, hoo.orYPos, edgeGutter_Height - edgeGutter_Depth)
+
+
+
+
+    
