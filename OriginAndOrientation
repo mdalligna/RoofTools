@@ -1,0 +1,54 @@
+'''
+Created on 26 Sep 2013
+
+@author: mdallign
+'''
+import Rhino as rh
+#import Grasshopper as gh
+
+import clr
+clr.AddReference("Grasshopper")
+import Grasshopper as gh
+
+orXPos = 0
+orYPos = 0
+orZPos = 0
+
+axisLine_Len = 120
+     
+# create origin and orientation for setting out the building
+def originCoordinateSystem(x, y, z):
+    originPoint = rh.Geometry.Point3d(x, y, z)
+    
+    xDir = rh.Geometry.Vector3d(originPoint.X+1, originPoint.Y, originPoint.Z)
+    yDir = rh.Geometry.Vector3d(originPoint.X, originPoint.Y+1, originPoint.Z)
+    zDir = rh.Geometry.Vector3d(originPoint.X, originPoint.Y, originPoint.Z+1)
+    
+    originXYPlane = rh.Geometry.Plane(originPoint, xDir, yDir)
+    originXZPlane = rh.Geometry.Plane(originPoint, xDir, zDir)
+    originYZPlane = rh.Geometry.Plane(originPoint, yDir, zDir)
+    
+    # do I really need to expose the plane direction
+    originXDir = rh.Geometry.Vector3d(originXYPlane.XAxis)
+    originYDir = rh.Geometry.Vector3d(originXYPlane.YAxis)
+    originZDir = rh.Geometry.Vector3d(originXYPlane.ZAxis)
+
+    return originPoint, originXYPlane, originXZPlane, originYZPlane, originXDir, originYDir, originZDir
+
+origin_Pt = originCoordinateSystem(orXPos, orYPos, orZPos)[0]
+originXY_Pl = originCoordinateSystem(orXPos, orYPos, orZPos)[1]
+originXZ_Pl = originCoordinateSystem(orXPos, orYPos, orZPos)[2]
+originYZ_Pl = originCoordinateSystem(orXPos, orYPos, orZPos)[3]
+originX_Dir = originCoordinateSystem(orXPos, orYPos, orZPos)[4]
+originY_Dir = originCoordinateSystem(orXPos, orYPos, orZPos)[5]
+originZ_Dir = originCoordinateSystem(orXPos, orYPos, orZPos)[6]
+
+# create the axis lines
+axisLine1 = rh.Geometry.Line(origin_Pt, originY_Dir, axisLine_Len)
+axisLine2 = rh.Geometry.Line(origin_Pt, -originX_Dir, axisLine_Len)
+
+# create plane at team position inputs come from GH
+def teamOriginCS(oPt, xPt, yPt):
+    plane = rh.Geometry.Plane(oPt, xPt, yPt)
+    return plane
+
