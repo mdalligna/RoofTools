@@ -1,0 +1,41 @@
+'''
+Created on 30 Sep 2013
+
+@author: mdallign
+'''
+import Rhino as rh
+import Grasshopper as gh
+
+import GlobalFunctions as hgf
+
+# prepare zone arcs list
+def zoneArcList(arcList, startArcIndex, endArcIndex):
+    newArcList = []
+    for i in range(len(arcList)):
+        newArcList.append(hgf.duplicateArc(rh.Geometry.Curve.TryGetArc(arcList[i])[1]))
+    
+    newArcList.reverse()    
+    finalArcList = []
+    for i in range(startArcIndex, endArcIndex):
+        finalArcList.append(newArcList[i])
+    return finalArcList
+
+# prepare zone surface list
+def zoneSurfTree(arcList, surfList):
+    tree = gh.DataTree[rh.Geometry.Brep]()
+    path = []
+    for i in range(len(arcList)):
+        path.append(gh.Kernel.Data.GH_Path(i))
+        tree.Add(surfList[i], path[i])
+    return tree
+
+#prepare zone subdivision
+def zoneSetOutPts(arcList, ptNum, bool):
+    ptTree = gh.DataTree[rh.Geometry.Point3d]()
+    path = []
+    for i in range(len(arcList)):
+        path.append(gh.Kernel.Data.GH_Path(i))
+        modDiv = hgf.curveDivision(rh.Geometry.Arc.ToNurbsCurve(arcList[i]), ptNum, bool)
+        ptTree.AddRange(modDiv, path[i])
+    return ptTree
+
