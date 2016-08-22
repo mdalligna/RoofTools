@@ -1,0 +1,217 @@
+'''
+Created on 26 Sep 2013
+
+@author: mdallign
+'''
+
+import Rhino as rh
+
+def orientOrigin(object, source_plane, target_plane):
+    xform = rh.Geometry.Transform.PlaneToPlane(source_plane, target_plane)
+    orientedObj = []
+    for i in range(len(object)):
+        object[i].Transform(xform)
+        orientedObj.append(object[i])
+    return orientedObj
+
+orientOrigin
+
+def NorthSouthMirror(object):
+    mO = rh.Geometry.Transform.Mirror(rh.Geometry.Plane.WorldZX)
+    object.Transform(mO)
+    return object
+
+NorthSouthMirror
+
+def EastWestMirror(object):
+    mO = rh.Geometry.Transform.Mirror(rh.Geometry.Plane.WorldYZ)
+    object.Transform(mO)
+    return object
+
+EastWestMirror
+
+
+def moveUpDown(x, y, z, object):
+    moveMatrix = rh.Geometry.Transform.Translation(x, y, z)
+    object.Transform(moveMatrix)
+    return object
+
+moveUpDown
+
+def vertPlaneWithLine(lines):
+    Planes = []
+    for i in range(len(lines)):
+       
+        oPt = rh.Geometry.Line.PointAt(lines[i], 0)
+        xPt = rh.Geometry.Line.PointAt(lines[i], 1)
+        yPt = rh.Geometry.Point3d(oPt)
+        mX = rh.Geometry.Transform.Translation(0, 0, 1)
+        yPt.Transform(mX)
+        
+        plane = rh.Geometry.Plane(oPt, xPt, yPt)
+        Planes.append(plane)
+    return Planes
+
+vertPlaneWithLine
+
+def projCrvVert(curves, surface):
+    ProjCrv = []
+    dir = rh.Geometry.Vector3d(0, 0, 1)
+    for i in range(len(curves)):
+        projCrv = rh.Geometry.Curve.ProjectToBrep(curves[i], surface, dir, 0.0001)
+        ProjCrv.append(projCrv[0])
+    return ProjCrv
+
+projCrvVert
+
+def crvCrvX(curve1, curve2):
+    Pts1 = []
+    Par1 = []
+    
+    Pts2 = []
+    Par2 = []
+    
+    events = rh.Geometry.Intersect.Intersection.CurveCurve(curve1, curve2, 0.0001, 0.0001)
+    for int in events:
+        pt1 = rh.Geometry.Point3d(int.PointA)
+        Pts1.append(pt1)
+        Par1.append(int.ParameterA)
+        
+        pt2 = rh.Geometry.Point3d(int.PointB)
+        Pts2.append(pt2)
+        Par2.append(int.ParameterB)
+        
+    return Pts1, Par1, Pts2, Par2
+
+crvCrvX
+
+def createCladZone(curve, surface):
+    #improvement= Locate ther curve and move down to origin
+    dirVec = rh.Geometry.Vector3d(0, 0, 100)
+    # the closed curves need to be in the clockwise direction for the 
+    # normal of the cutter to face outwards
+    cutter = rh.Geometry.Extrusion.CreateExtrusion(curve, dirVec)
+    bcutter = rh.Geometry.Surface.ToBrep(cutter)
+
+    #splitsrf = rh.Geometry.Brep.Split(surface, bcutter, 0.0001)
+    splitsrf = rh.Geometry.Brep.Trim(surface, bcutter, 0.0001)
+    
+    return splitsrf
+
+createCladZone
+
+def createCladOutline(curve, surface):
+    projCrv = []
+    dir = rh.Geometry.Vector3d(0, 0, 1)
+    for i in range(len(curve)):
+        projcrv = rh.Geometry.Curve.ProjectToBrep(curve[i], surface, dir, 0.0001)
+        projCrv.append(projcrv[0])
+    return projCrv
+
+createCladOutline
+
+def fromCrvToArc(curve, numPts):
+    Pts = []
+    TgVec = []
+    parOnCrv = rh.Geometry.Curve.DivideByCount(curve, numPts, True)
+    for i in range(len(parOnCrv)):
+        pts = rh.Geometry.Curve.PointAt(curve, parOnCrv[i])
+        vec = rh.Geometry.Curve.TangentAt(curve, parOnCrv[i])
+        Pts.append(pts)
+        TgVec.append(vec)
+
+    Arc = []
+    for i in range(len(Pts)):
+        if (i < len(Pts) -1):
+            arc = rh.Geometry.Arc(Pts[i], TgVec[i], Pts[i+1])
+            Arc.append(arc)
+            
+    return Arc, Pts
+
+
+fromCrvToArc
+
+def fromCrvToArcOptional(curve, numPts, startPt, endPt):
+    Pts = []
+    TgVec = []
+    parOnCrv = rh.Geometry.Curve.DivideByCount(curve, numPts, True)
+    for i in range(len(parOnCrv)):
+        pts = rh.Geometry.Curve.PointAt(curve, parOnCrv[i])
+        vec = rh.Geometry.Curve.TangentAt(curve, parOnCrv[i])
+        Pts.append(pts)
+        TgVec.append(vec)
+    # correction on the list to use points on the oval
+    Pts.pop(0)
+    Pts.pop(len(Pts)-1)
+    Pts.insert(0, startPt)
+    Pts.append(endPt)
+
+    Arc = []
+    for i in range(len(Pts)):
+        if (i < len(Pts) -1):
+            arc = rh.Geometry.Arc(Pts[i], TgVec[i], Pts[i+1])
+            Arc.append(arc)
+    return Arc, Pts
+
+fromCrvToArcOptional
+
+def pointOnCrv(curve, parameter):
+    #rh.Geometry.NurbsCurve.Reparameterize(curve, 10.00)
+    domain = rh.Geometry.NurbsCurve.Domain.SetValue(curve, rh.Geometry.Interval(0,1))
+    point = curve.PointAt(parameter)
+   
+    return point
+    
+pointOnCrv  
+
+def duplicatePoint(point):
+    pt = rh.Geometry.Point3d(point)
+    return pt
+
+duplicatePoint 
+
+def duplicateArc(arc):
+    sPt = rh.Geometry.Arc.StartPoint.GetValue(arc)
+    ePt = rh.Geometry.Arc.EndPoint.GetValue(arc)
+    mPt = rh.Geometry.Arc.MidPoint.GetValue(arc)
+    arc = rh.Geometry.Arc(sPt, mPt, ePt)
+
+    return arc
+    
+def createSurfHorSec(surface, point, xDir, yDir):
+    plane = rh.Geometry.Plane(point, xDir, yDir)
+    
+    curve = rh.Geometry.Intersect.Intersection.BrepPlane(surface, plane, 0.01)[1]
+    return curve
+    
+def openCrvPlaneIntersect(curve, planes):
+    Pt = []
+    Par = []
+    for i in range(len(planes)):
+        events = rh.Geometry.Intersect.Intersection.CurvePlane(curve, planes[i], 0.0001)
+        for int in events:
+            pt = rh.Geometry.Point3d(int.PointA)
+            par = int.ParameterA
+            Pt.append(pt)
+            Par.append(par)
+    return Pt, Par
+        
+def curveDivision(curve, ptNum, bool):
+    crvDiv = rh.Geometry.Curve.DivideByCount(curve, ptNum, bool)
+
+    crvPts = []
+    for i in range(len(crvDiv)):
+        pts = rh.Geometry.Curve.PointAt(curve, crvDiv[i])
+        crvPts.append(pts)
+    return crvPts  
+
+def loftList(crv1, crv2):
+    SrfList = []
+    for i in range(len(crv1)):
+        srf = rh.Geometry.Brep.CreateFromLoft((crv1[i], crv2[i]), rh.Geometry.Point3d.Unset, rh.Geometry.Point3d.Unset, rh.Geometry.LoftType.Straight, False)
+        SrfList.append(srf[0])
+    return SrfList
+
+
+
+    
